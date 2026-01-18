@@ -1,4 +1,10 @@
+import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -6,37 +12,33 @@ const openai = new OpenAI({
 
 export default async function handler(req, res) {
   try {
-    // ✅ GET request - simple health check
     if (req.method === "GET") {
-      return res.status(200).json({
-        status: "Commander AI is LIVE 🚀",
-        message: "Use POST request with JSON body { message: 'your message' }",
-      });
+      return res.status(200).json({ status: "Commander AI is LIVE via Supabase 🔥" });
     }
 
-    // ✅ POST request - AI response
     if (req.method === "POST") {
       const { message } = req.body;
 
-      if (!message) {
-        return res.status(400).json({ error: "Message is required" });
-      }
+      if (!message) return res.status(400).json({ error: "Message required" });
 
+      // ✅ Save user message to Supabase
+      await supabase.from("messages").insert([{ message }]);
+
+      // ✅ Call OpenAI
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "You are Commander AI, company brain assistant." },
-          { role: "user", content: message }
-        ],
+        messages: [{ role: "system", content: "You are Commander AI." }, { role: "user", content: message }],
         temperature: 0.7,
       });
 
       const aiReply = response.choices[0].message.content;
 
+      // ✅ Save AI reply to Supabase
+      await supabase.from("messages").insert([{ message: aiReply, role: "ai" }]);
+
       return res.status(200).json({ reply: aiReply });
     }
 
-    // ❌ Other methods
     res.setHeader("Allow", ["GET", "POST"]);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   } catch (err) {
