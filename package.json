@@ -1,11 +1,10 @@
 {
-  "name": "commander-ai-backend",
+  "name": "commander-ai",
   "version": "1.0.0",
-  "description": "Commander AI - Company Brain Backend",
-  "main": "api/analyze.js",
+  "private": true,
   "type": "module",
-  "scripts": {
-    "start": "node api/analyze.js"
+  "engines": {
+    "node": "18.x"
   },
   "dependencies": {
     "openai": "^4.0.0"
